@@ -17,8 +17,11 @@ class Portainer {
         })
     }
 
+    static status = { 1: 'Active', 2: 'Inactive' }
+    static type = { 1: 'Swarm', 2: 'Compose' }
+
     async getVersion() {
-        const response = await this.client.get('/status/version')
+        const response = await this.client.get('/system/version')
         return response.data
     }
 
