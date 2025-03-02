@@ -1,5 +1,6 @@
 [![Release](https://img.shields.io/github/actions/workflow/status/cssnr/portainer-stack-deploy-action/release.yaml?logo=github&logoColor=white&label=release)](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/release.yaml)
 [![Test](https://img.shields.io/github/actions/workflow/status/cssnr/portainer-stack-deploy-action/test.yaml?logo=github&logoColor=white&label=test)](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/test.yaml)
+[![Lint](https://img.shields.io/github/actions/workflow/status/cssnr/portainer-stack-deploy-action/lint.yaml?logo=github&logoColor=white&label=lint)](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/lint.yaml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=cssnr_portainer-stack-deploy-action&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=cssnr_portainer-stack-deploy-action)
 [![GitHub Release Version](https://img.shields.io/github/v/release/cssnr/portainer-stack-deploy-action?logo=github)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest)
 [![GitHub Last Commit](https://img.shields.io/github/last-commit/cssnr/portainer-stack-deploy-action?logo=github&logoColor=white&label=updated)](https://github.com/cssnr/portainer-stack-deploy-action/graphs/commit-activity)
@@ -14,7 +15,6 @@
 - [Outputs](#Outputs)
 - [Examples](#Examples)
 - [Troubleshooting](#Troubleshooting)
-- [Development](#Development)
 - [Support](#Support)
 - [Contributing](#Contributing)
 
@@ -26,10 +26,8 @@ This action is written from the ground up in VanillaJS and is not a fork/clone o
 _No Portainer?_ You can deploy directly to a docker over ssh with: [cssnr/stack-deploy-action](https://github.com/cssnr/stack-deploy-action)
 
 > [!NOTE]  
-> Please submit
-> a [Feature Request](https://github.com/cssnr/portainer-stack-deploy-action/discussions/categories/feature-requests)
-> for new features or [Open an Issue](https://github.com/cssnr/portainer-stack-deploy-action/issues) if you find any
-> bugs.
+> Please submit a [Feature Request](https://github.com/cssnr/portainer-stack-deploy-action/discussions/categories/feature-requests)
+> for new features or [Open an Issue](https://github.com/cssnr/portainer-stack-deploy-action/issues) if you find any bugs.
 
 ## Inputs
 
@@ -72,7 +70,8 @@ put the full http URL to that repository here.
 JSON should be an object. Example: `{"KEY": "Value"}`
 
 > [!WARNING]  
-> Inputs are NOT secure and using `env_json` on a public repository will expose this data.  
+> Inputs are NOT secure unless using secrets or secure output.
+> Using `env_json` on a public repository will otherwise expose this data.  
 > To securely pass an environment use the `env_file` option.
 
 **merge_env** - If this is `true` and the stack exists, will update the existing Env with the provided `env_json/env_file`.
@@ -87,13 +86,13 @@ See the [docs](https://docs.portainer.io/advanced/relative-paths) for more info.
 
 **summary** - Write a Summary for the job. To disable this set to `false`.
 
-<details><summary>📜 View Example Summary</summary>
+<details><summary>👀 View Example Job Summary</summary>
 
 ---
 
-🎉 **Updated** Existing Stack 110: `alpine-test`
+🎉 **Created** New Stack 112: `test_portainer-stack-deploy`
 
-<details><summary>Stack Details</summary><table><tr><th>Item</th><th>Value</th></tr><tr><td>ID</td><td>110</td></tr><tr><td>Name</td><td>alpine-test</td></tr><tr><td>File</td><td>docker-compose.yml</td></tr><tr><td>Type</td><td>Swarm</td></tr><tr><td>Status</td><td>Active</td></tr><tr><td>Created</td><td>2/22/2025, 9:02:26 PM</td></tr><tr><td>Updated</td><td>2/23/2025, 3:41:02 AM</td></tr><tr><td>Path</td><td>/data/compose/110</td></tr><tr><td>EndpointID</td><td>1</td></tr><tr><td>SwarmID</td><td>wr8i8agdr05n6wsf1tkcnhwik</td></tr></table></details>
+<details><summary>Stack Details</summary><table><tr><th>Item</th><th>Value</th></tr><tr><td>ID</td><td>112</td></tr><tr><td>Name</td><td>test_portainer-stack-deploy</td></tr><tr><td>File</td><td>docker-compose.yml</td></tr><tr><td>Type</td><td>Swarm</td></tr><tr><td>Status</td><td>Active</td></tr><tr><td>Created</td><td>2/28/2025, 3:09:16 AM</td></tr><tr><td>Updated</td><td>-</td></tr><tr><td>Path</td><td>/data/compose/112</td></tr><tr><td>EndpointID</td><td>1</td></tr><tr><td>SwarmID</td><td>wr8i8agdr05n6wsf1tkcnhwik</td></tr></table></details>
 
 ---
 
@@ -178,6 +177,24 @@ Specify environment variables, may use json, or file, or a combination of both:
     type: file
     env_json: '{"KEY": "Value"}'
     env_file: .env
+```
+
+Multiline JSON data (note secrets are secure in this context):
+
+```yaml
+- name: 'Portainer Deploy'
+  uses: cssnr/portainer-stack-deploy-action@v1
+  with:
+    token: ${{ secrets.PORTAINER_TOKEN }}
+    url: https://portainer.example.com:9443
+    name: stack-name
+    file: docker-compose.yaml
+    type: file
+    env_json: |
+      {
+        "APP_PRIVATE_KEY": "${{ secrets.APP_PRIVATE_KEY }}",
+        "VERSION": "${{ inputs.VERSION }}"
+      }
 ```
 
 Merging existing environment variables with additional variables:
@@ -299,32 +316,6 @@ Permissions documentation for
 [Workflows](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/controlling-permissions-for-github_token)
 and [Actions](https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication).
 
-# Development
-
-Until the `CONTRIBUTING.md` is finished being created, here is a quick rundown:
-
-1. Fork the repository.
-2. Create a branch in your fork!
-3. Run: `npm install`
-4. Make your changes.
-5. Build or watch: `npm run build:watch`
-6. [Test](#Testing) your changes.
-7. Ensure changes are built: `npm build`
-8. Commit and push your changes (including `dist`).
-9. Create a PR to this repository.
-10. Verify the tests pass, otherwise resolve.
-11. Make sure to keep your branch up-to-date.
-
-### Testing
-
-Currently, the test is in [push.yaml](.github/workflows/push.yaml).
-You can either test on GitHub by enabling this workflow, or locally using [act](https://github.com/nektos/act).
-In both cases, you will need to have the secrets added either to GitHub or the `.secrets` file.
-
-For instructions on running/testing actions locally, there is more information in this
-[README.md](https://github.com/smashedr/docker-test-action?tab=readme-ov-file#development) and this
-[README.md](https://github.com/smashedr/js-test-action?tab=readme-ov-file#local-development).
-
 # Support
 
 For general help or to request a feature, see:
@@ -342,6 +333,8 @@ If you are experiencing an issue/bug or getting unexpected results, you can:
 # Contributing
 
 Currently, the best way to contribute to this project is to star this project on GitHub.
+
+If you would like to submit a PR, please review the [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Additionally, you can support other GitHub Actions I have published:
 
