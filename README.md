@@ -1,5 +1,6 @@
-[![Tags](https://img.shields.io/badge/tags-v1_%7C_v1.1-blue?logo=git&logoColor=white)](https://github.com/cssnr/portainer-stack-deploy-action/tags)
-[![GitHub Release Version](https://img.shields.io/github/v/release/cssnr/portainer-stack-deploy-action?logo=git&logoColor=white&label=latest)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest)
+[![GitHub Tag Major](https://img.shields.io/github/v/tag/cssnr/portainer-stack-deploy-action?sort=semver&filter=!v*.*&logo=git&logoColor=white&labelColor=585858&label=%20)](https://github.com/cssnr/portainer-stack-deploy-action/tags)
+[![GitHub Tag Minor](https://img.shields.io/github/v/tag/cssnr/portainer-stack-deploy-action?sort=semver&filter=!v*.*.*&logo=git&logoColor=white&labelColor=585858&label=%20)](https://github.com/cssnr/portainer-stack-deploy-action/tags)
+[![GitHub Release Version](https://img.shields.io/github/v/release/cssnr/portainer-stack-deploy-action?logo=git&logoColor=white&labelColor=585858&label=%20)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest)
 [![Release](https://img.shields.io/github/actions/workflow/status/cssnr/portainer-stack-deploy-action/release.yaml?logo=github&label=release)](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/release.yaml)
 [![Test](https://img.shields.io/github/actions/workflow/status/cssnr/portainer-stack-deploy-action/test.yaml?logo=github&label=test)](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/test.yaml)
 [![Lint](https://img.shields.io/github/actions/workflow/status/cssnr/portainer-stack-deploy-action/lint.yaml?logo=github&label=lint)](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/lint.yaml)
@@ -61,6 +62,9 @@ This is a fairly simple action, for more details see
 | fs_path    |    -     | -                     | Relative Path (BE) \*    |
 | summary    |    -     | `true`                | Add Summary to Job \*    |
 
+_For additional details on inputs, see the Portainer API
+[documentation](https://app.swaggerhub.com/apis/portainer/portainer-ce/)._
+
 **token** - To create a Portainer API token see: https://docs.portainer.io/api/access
 
 **endpoint** - If `endpoint` is not provided the first endpoint returned by the API will be used.
@@ -118,9 +122,6 @@ To view a workflow run, click on a recent
     name: stack-name
     file: docker-compose.yaml
 ```
-
-For more information on variables, see the Portainer API Documentation:  
-https://app.swaggerhub.com/apis/portainer/portainer-ce/
 
 ## Outputs
 
@@ -387,17 +388,15 @@ https://github.com/cssnr/portainer-stack-deploy-action/network/dependents
 
 ## Tags
 
-The following [rolling tags](https://github.com/cssnr/portainer-stack-deploy-action/tags) are maintained.
+The following rolling [tags](https://github.com/cssnr/portainer-stack-deploy-action/tags) are maintained.
 
-| Tag      | Example  | Bugs | Feat. | Description                            |
-| -------- | -------- | :--: | :---: | -------------------------------------- |
-| `vN`     | `v1`     |  ✅  |  ✅   | Points to latest `vN.x.x` release.     |
-| `vN.N`   | `v1.0`   |  ✅  |  ❌   | Points to latest `vN.N.x` release.     |
-| `vN.N.N` | `v1.0.0` |  ❌  |  ❌   | Points directly to a specific release. |
+| Tag                                                                                                                                                                                                                                               | Example  | Target   | Bugs | Feat. | Description                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------- | :--: | :---: | --------------------------------------------------------- |
+| [![GitHub Tag Major](https://img.shields.io/github/v/tag/cssnr/portainer-stack-deploy-action?sort=semver&filter=!v*.*&style=for-the-badge&label=%20&color=limegreen)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest)     | `vN`     | `vN.x.x` |  ✅  |  ✅   | Includes new features but is always backwards compatible. |
+| [![GitHub Tag Minor](https://img.shields.io/github/v/tag/cssnr/portainer-stack-deploy-action?sort=semver&filter=!v*.*.*&style=for-the-badge&label=%20&color=yellowgreen)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest) | `vN.N`   | `vN.N.x` |  ✅  |  ❌   | Only receives bug fixes. This is the most stable tag.     |
+| [![GitHub Release](https://img.shields.io/github/v/release/cssnr/portainer-stack-deploy-action?style=for-the-badge&label=%20&color=orange)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest)                               | `vN.N.N` | `vN.N.N` |  ❌  |  ❌   | Not a rolling tag. **Not** recommended.                   |
 
-**Important:** Make sure to use one of the [latest tags](https://github.com/cssnr/portainer-stack-deploy-action/tags).
-
-You can view the release notes for each version on the [Releases Page](https://github.com/cssnr/portainer-stack-deploy-action/releases).
+You can view the release notes for each version on the [releases](https://github.com/cssnr/portainer-stack-deploy-action/releases) page.
 
 ## Troubleshooting
 
