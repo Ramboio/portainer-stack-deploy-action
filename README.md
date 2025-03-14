@@ -1,9 +1,9 @@
 [![GitHub Tag Major](https://img.shields.io/github/v/tag/cssnr/portainer-stack-deploy-action?sort=semver&filter=!v*.*&logo=git&logoColor=white&labelColor=585858&label=%20)](https://github.com/cssnr/portainer-stack-deploy-action/tags)
 [![GitHub Tag Minor](https://img.shields.io/github/v/tag/cssnr/portainer-stack-deploy-action?sort=semver&filter=!v*.*.*&logo=git&logoColor=white&labelColor=585858&label=%20)](https://github.com/cssnr/portainer-stack-deploy-action/tags)
 [![GitHub Release Version](https://img.shields.io/github/v/release/cssnr/portainer-stack-deploy-action?logo=git&logoColor=white&labelColor=585858&label=%20)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest)
-[![Release](https://img.shields.io/github/actions/workflow/status/cssnr/portainer-stack-deploy-action/release.yaml?logo=github&label=release)](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/release.yaml)
-[![Test](https://img.shields.io/github/actions/workflow/status/cssnr/portainer-stack-deploy-action/test.yaml?logo=github&label=test)](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/test.yaml)
-[![Lint](https://img.shields.io/github/actions/workflow/status/cssnr/portainer-stack-deploy-action/lint.yaml?logo=github&label=lint)](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/lint.yaml)
+[![Workflow Release](https://img.shields.io/github/actions/workflow/status/cssnr/portainer-stack-deploy-action/release.yaml?logo=github&label=release)](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/release.yaml)
+[![Workflow Test](https://img.shields.io/github/actions/workflow/status/cssnr/portainer-stack-deploy-action/test.yaml?logo=github&label=test)](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/test.yaml)
+[![Workflow Lint](https://img.shields.io/github/actions/workflow/status/cssnr/portainer-stack-deploy-action/lint.yaml?logo=github&label=lint)](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/lint.yaml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=cssnr_portainer-stack-deploy-action&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=cssnr_portainer-stack-deploy-action)
 [![GitHub Last Commit](https://img.shields.io/github/last-commit/cssnr/portainer-stack-deploy-action?logo=github&label=updated)](https://github.com/cssnr/portainer-stack-deploy-action/graphs/commit-activity)
 [![Codeberg Last Commit](https://img.shields.io/gitea/last-commit/cssnr/portainer-stack-deploy-action/master?gitea_url=https%3A%2F%2Fcodeberg.org%2F&logo=codeberg&logoColor=white&label=updated)](https://codeberg.org/cssnr/portainer-stack-deploy-action)
@@ -35,50 +35,48 @@ _No Portainer?_ You can deploy directly to a docker over ssh with: [cssnr/stack-
 > Please submit a [Feature Request](https://github.com/cssnr/portainer-stack-deploy-action/discussions/categories/feature-requests)
 > for new features or [Open an Issue](https://github.com/cssnr/portainer-stack-deploy-action/issues) if you find any bugs.
 
-This is a fairly simple action, for more details see
-[src/index.js](src/index.js) and [src/portainer.js](src/portainer.js).
+This is a fairly simple action, for more details see [src/index.js](src/index.js) and [src/portainer.js](src/portainer.js).
 
 ## Inputs
 
-| input      | required | default               | description              |
-| ---------- | :------: | --------------------- | ------------------------ |
-| token      | **Yes**  | -                     | Portainer Token \*       |
-| url        | **Yes**  | -                     | Portainer URL            |
-| name       | **Yes**  | -                     | Stack Name               |
-| file       |    -     | `docker-compose.yaml` | Compose File             |
-| endpoint   |    -     | `endpoints[0].Id`     | Portainer Endpoint \*    |
-| ref        |    -     | `current reference`   | Repository Ref \*        |
-| repo       |    -     | `current repository`  | Repository URL \*        |
-| tlsskip    |    -     | `false`               | Skip Repo TLS Verify     |
-| prune      |    -     | `true`                | Prune Services           |
-| pull       |    -     | `true`                | Pull Images              |
-| type       |    -     | `repo`                | Type [`repo`, `file`] \* |
-| standalone |    -     | `false`               | Deploy Standalone Stack  |
-| env_json   |    -     | -                     | Dotenv JSON Data \*\*    |
-| env_file   |    -     | -                     | Dotenv File Path \*      |
-| merge_env  |    -     | `false`               | Merge Env Vars \*        |
-| username   |    -     | -                     | Repository Username \*   |
-| password   |    -     | -                     | Repository Password \*   |
-| fs_path    |    -     | -                     | Relative Path (BE) \*    |
-| summary    |    -     | `true`                | Add Summary to Job \*    |
+| Input        | Required | Default               | Description              |
+| :----------- | :------: | :-------------------- | :----------------------- |
+| `token`      | **Yes**  | -                     | Portainer Token \*       |
+| `url`        | **Yes**  | -                     | Portainer URL            |
+| `name`       | **Yes**  | -                     | Stack Name               |
+| `file`       |    -     | `docker-compose.yaml` | Compose File             |
+| `endpoint`   |    -     | `endpoints[0].Id`     | Portainer Endpoint \*    |
+| `ref`        |    -     | `current reference`   | Repository Ref \*        |
+| `repo`       |    -     | `current repository`  | Repository URL \*        |
+| `tlsskip`    |    -     | `false`               | Skip Repo TLS Verify     |
+| `prune`      |    -     | `true`                | Prune Services           |
+| `pull`       |    -     | `true`                | Pull Images              |
+| `type`       |    -     | `repo`                | Type [`repo`, `file`] \* |
+| `standalone` |    -     | `false`               | Deploy Standalone Stack  |
+| `env_json`   |    -     | -                     | Dotenv JSON Data \*\*    |
+| `env_file`   |    -     | -                     | Dotenv File Path \*      |
+| `merge_env`  |    -     | `false`               | Merge Env Vars \*        |
+| `username`   |    -     | -                     | Repository Username \*   |
+| `password`   |    -     | -                     | Repository Password \*   |
+| `fs_path`    |    -     | -                     | Relative Path (BE) \*    |
+| `summary`    |    -     | `true`                | Add Summary to Job \*    |
 
-_For additional details on inputs, see the Portainer API
-[documentation](https://app.swaggerhub.com/apis/portainer/portainer-ce/)._
+> For more details on inputs, see the Portainer API [documentation](https://app.swaggerhub.com/apis/portainer/portainer-ce/).
 
-**token** - To create a Portainer API token see: https://docs.portainer.io/api/access
+**token:** To create a Portainer API token see: https://docs.portainer.io/api/access
 
-**endpoint** - If `endpoint` is not provided the first endpoint returned by the API will be used.
+**endpoint:** If `endpoint` is not provided the first endpoint returned by the API will be used.
 If you only have one endpoint, this will work as expected, otherwise, you should provide an endpoint.
 
-**ref** - If you want to deploy a different ref than the one triggering the workflow.
+**ref:** If you want to deploy a different ref than the one triggering the workflow.
 Useful if you are deploying from another repository. Example: `refs/heads/master`
 
-**repo** - This defaults to the repository running the action. If you want to deploy a different repository
+**repo:** This defaults to the repository running the action. If you want to deploy a different repository
 put the full http URL to that repository here.
 
-**type** - Type of Deployment. Currently, supports either `repo` or `file`.
+**type:** Type of Deployment. Currently, supports either `repo` or `file`.
 
-**env_json/env_file** - Optional environment variables used when creating the stack. File should be in dotenv format and
+**env_json/env_file:** Optional environment variables used when creating the stack. File should be in dotenv format and
 JSON should be an object. Example: `{"KEY": "Value"}`
 
 > [!WARNING]  
@@ -86,20 +84,19 @@ JSON should be an object. Example: `{"KEY": "Value"}`
 > Using `env_json` on a public repository will otherwise expose this data.
 > To securely pass an environment use the `env_file` option.
 
-**merge_env** - If this is `true` and the stack exists, will update the existing Env with the provided `env_json/env_file`.
+**merge_env:** If this is `true` and the stack exists, will update the existing Env with the provided `env_json/env_file`.
 If you are not providing an env, the existing env will be used, and you do not need to set this.
 
-**username/password** - Only set these if the `repo` is private and requires authentication.
+**username/password:** Only set these if the `repo` is private and requires authentication.
 This is NOT the Portainer username/password, see `token` for Portainer authentication.
 
-**fs_path** - Relative Path Support for Portainer BE.
+**fs_path:** Relative Path Support for Portainer BE.
 Set this to enable relative path volumes support for volume mappings in your compose file.
 See the [docs](https://docs.portainer.io/advanced/relative-paths) for more info.
 
-**summary** - Write a Summary for the job. To disable this set to `false`.
+**summary:** Write a Summary for the job. To disable this set to `false`.
 
-To view a workflow run, click on a recent
-[Test](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/test.yaml) job _(requires login)_.
+To view a workflow run, click on a recent [Test](https://github.com/cssnr/portainer-stack-deploy-action/actions/workflows/test.yaml) job _(requires login)_.
 
 <details><summary>👀 View Example Job Summary</summary>
 
@@ -125,8 +122,8 @@ To view a workflow run, click on a recent
 
 ## Outputs
 
-| output     | description |
-| ---------- | ----------- |
+| Output     | Description |
+| :--------- | :---------- |
 | stackID    | Stack ID    |
 | swarmID    | Swarm ID    |
 | endpointID | Endpoint ID |
@@ -284,7 +281,7 @@ Portainer Business Edition Only.
 ```
 
 </details>
-<details><summary>Full Example</summary>
+<details><summary>Full build and deploy workflow</summary>
 
 This example builds an image, pushes to a registry, then deploys to Portainer.
 
@@ -390,11 +387,11 @@ https://github.com/cssnr/portainer-stack-deploy-action/network/dependents
 
 The following rolling [tags](https://github.com/cssnr/portainer-stack-deploy-action/tags) are maintained.
 
-| Tag                                                                                                                                                                                                                                               | Example  | Target   | Bugs | Feat. | Description                                               |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------- | :--: | :---: | --------------------------------------------------------- |
-| [![GitHub Tag Major](https://img.shields.io/github/v/tag/cssnr/portainer-stack-deploy-action?sort=semver&filter=!v*.*&style=for-the-badge&label=%20&color=limegreen)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest)     | `vN`     | `vN.x.x` |  ✅  |  ✅   | Includes new features but is always backwards compatible. |
-| [![GitHub Tag Minor](https://img.shields.io/github/v/tag/cssnr/portainer-stack-deploy-action?sort=semver&filter=!v*.*.*&style=for-the-badge&label=%20&color=yellowgreen)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest) | `vN.N`   | `vN.N.x` |  ✅  |  ❌   | Only receives bug fixes. This is the most stable tag.     |
-| [![GitHub Release](https://img.shields.io/github/v/release/cssnr/portainer-stack-deploy-action?style=for-the-badge&label=%20&color=orange)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest)                               | `vN.N.N` | `vN.N.N` |  ❌  |  ❌   | Not a rolling tag. **Not** recommended.                   |
+| Version&nbsp;Tag                                                                                                                                                                                                                           | Rolling | Bugs | Feat. | Target   | Example  |
+| :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-----: | :--: | :---: | :------- | :------- |
+| [![GitHub Tag Major](https://img.shields.io/github/v/tag/cssnr/portainer-stack-deploy-action?sort=semver&filter=!v*.*&style=for-the-badge&label=%20&color=44cc10)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest) |   ✅    |  ✅  |  ✅   | `vN.x.x` | `vN`     |
+| [![GitHub Tag Minor](https://img.shields.io/github/v/tag/cssnr/portainer-stack-deploy-action?sort=semver&filter=!v*.*.*&style=for-the-badge&label=%20&color=blue)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest) |   ✅    |  ✅  |  ❌   | `vN.N.x` | `vN.N`   |
+| [![GitHub Release](https://img.shields.io/github/v/release/cssnr/portainer-stack-deploy-action?style=for-the-badge&label=%20&color=red)](https://github.com/cssnr/portainer-stack-deploy-action/releases/latest)                           |   ❌    |  ❌  |  ❌   | `vN.N.N` | `vN.N.N` |
 
 You can view the release notes for each version on the [releases](https://github.com/cssnr/portainer-stack-deploy-action/releases) page.
 
