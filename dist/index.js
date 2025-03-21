@@ -13782,7 +13782,7 @@ module.exports = {
 
 
 const { parseSetCookie } = __nccwpck_require__(8915)
-const { stringify, getHeadersList } = __nccwpck_require__(3834)
+const { stringify } = __nccwpck_require__(3834)
 const { webidl } = __nccwpck_require__(4222)
 const { Headers } = __nccwpck_require__(6349)
 
@@ -13858,14 +13858,13 @@ function getSetCookies (headers) {
 
   webidl.brandCheck(headers, Headers, { strict: false })
 
-  const cookies = getHeadersList(headers).cookies
+  const cookies = headers.getSetCookie()
 
   if (!cookies) {
     return []
   }
 
-  // In older versions of undici, cookies is a list of name:value.
-  return cookies.map((pair) => parseSetCookie(Array.isArray(pair) ? pair[1] : pair))
+  return cookies.map((pair) => parseSetCookie(pair))
 }
 
 /**
@@ -14293,14 +14292,15 @@ module.exports = {
 /***/ }),
 
 /***/ 3834:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ ((module) => {
 
 "use strict";
 
 
-const assert = __nccwpck_require__(2613)
-const { kHeadersList } = __nccwpck_require__(6443)
-
+/**
+ * @param {string} value
+ * @returns {boolean}
+ */
 function isCTLExcludingHtab (value) {
   if (value.length === 0) {
     return false
@@ -14561,31 +14561,13 @@ function stringify (cookie) {
   return out.join('; ')
 }
 
-let kHeadersListNode
-
-function getHeadersList (headers) {
-  if (headers[kHeadersList]) {
-    return headers[kHeadersList]
-  }
-
-  if (!kHeadersListNode) {
-    kHeadersListNode = Object.getOwnPropertySymbols(headers).find(
-      (symbol) => symbol.description === 'headers list'
-    )
-
-    assert(kHeadersListNode, 'Headers cannot be parsed')
-  }
-
-  const headersList = headers[kHeadersListNode]
-  assert(headersList)
-
-  return headersList
-}
-
 module.exports = {
   isCTLExcludingHtab,
-  stringify,
-  getHeadersList
+  validateCookieName,
+  validateCookiePath,
+  validateCookieValue,
+  toIMFDate,
+  stringify
 }
 
 
@@ -18589,6 +18571,7 @@ const {
   isValidHeaderName,
   isValidHeaderValue
 } = __nccwpck_require__(5523)
+const util = __nccwpck_require__(9023)
 const { webidl } = __nccwpck_require__(4222)
 const assert = __nccwpck_require__(2613)
 
@@ -19142,6 +19125,9 @@ Object.defineProperties(Headers.prototype, {
   [Symbol.toStringTag]: {
     value: 'Headers',
     configurable: true
+  },
+  [util.inspect.custom]: {
+    enumerable: false
   }
 })
 
@@ -28318,6 +28304,20 @@ class Pool extends PoolBase {
       ? { ...options.interceptors }
       : undefined
     this[kFactory] = factory
+
+    this.on('connectionError', (origin, targets, error) => {
+      // If a connection error occurs, we remove the client from the pool,
+      // and emit a connectionError event. They will not be re-used.
+      // Fixes https://github.com/nodejs/undici/issues/3895
+      for (const target of targets) {
+        // Do not use kRemoveClient here, as it will close the client,
+        // but the client cannot be closed in this state.
+        const idx = this[kClients].indexOf(target)
+        if (idx !== -1) {
+          this[kClients].splice(idx, 1)
+        }
+      }
+    })
   }
 
   [kGetDispatcher] () {
@@ -30629,6 +30629,11 @@ const axios = __nccwpck_require__(7269)
 const https = __nccwpck_require__(5692)
 
 class Portainer {
+    /**
+     * Portainer API
+     * @param {String} url
+     * @param {String} token
+     */
     constructor(url, token) {
         url = url.replace(/\/$/, '')
         if (!url.endsWith('api')) {
@@ -30647,16 +30652,29 @@ class Portainer {
     static status = { 1: 'Active', 2: 'Inactive' }
     static type = { 1: 'Swarm', 2: 'Compose' }
 
+    /**
+     * Get Version
+     * @return {Promise<Object>}
+     */
     async getVersion() {
         const response = await this.client.get('/system/version')
         return response.data
     }
 
+    /**
+     * Get Endpoints
+     * @return {Promise<Object[]>}
+     */
     async getEndpoints() {
         const response = await this.client.get('/endpoints')
         return response.data
     }
 
+    /**
+     * Get Swarm
+     * @param {String|Number} endpointId
+     * @return {Promise<Object>}
+     */
     async getSwarm(endpointId) {
         const response = await this.client.get(
             `/endpoints/${endpointId}/docker/swarm`
@@ -30664,11 +30682,22 @@ class Portainer {
         return response.data
     }
 
+    /**
+     * Get Stacks
+     * @return {Promise<Object[]>}
+     */
     async getStacks() {
         const response = await this.client.get('/stacks')
         return response.data
     }
 
+    /**
+     * Update Stack Repository
+     * @param {String} stackID
+     * @param {String|Number} endpointId
+     * @param {Object} body
+     * @return {Promise<Object>}
+     */
     async updateStackRepo(stackID, endpointId, body) {
         const response = await this.client.put(
             `/stacks/${stackID}/git/redeploy`,
@@ -30678,6 +30707,13 @@ class Portainer {
         return response.data
     }
 
+    /**
+     * Create Stack Repository
+     * @param {String|Number} endpointId
+     * @param {Object} body
+     * @param {String} [url]
+     * @return {Promise<Object>}
+     */
     async createStackRepo(endpointId, body, url = '') {
         if (body.swarmID) {
             url = '/stacks/create/swarm/repository'
@@ -30690,6 +30726,13 @@ class Portainer {
         return response.data
     }
 
+    /**
+     * Update Stack String
+     * @param {String} stackID
+     * @param {String|Number} endpointId
+     * @param {Object} body
+     * @return {Promise<Object>}
+     */
     async updateStackString(stackID, endpointId, body) {
         const response = await this.client.put(`/stacks/${stackID}`, body, {
             params: { endpointId },
@@ -30697,6 +30740,13 @@ class Portainer {
         return response.data
     }
 
+    /**
+     * Create Stack String
+     * @param {String|Number} endpointId
+     * @param {Object} body
+     * @param {String} [url]
+     * @return {Promise<Object>}
+     */
     async createStackString(endpointId, body, url = '') {
         if (body.swarmID) {
             url = '/stacks/create/swarm/string'
@@ -32619,7 +32669,7 @@ module.exports = parseParams
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
-/*! Axios v1.8.2 Copyright (c) 2025 Matt Zabriskie and contributors */
+/*! Axios v1.8.4 Copyright (c) 2025 Matt Zabriskie and contributors */
 
 
 const FormData$1 = __nccwpck_require__(6454);
@@ -34699,13 +34749,13 @@ function combineURLs(baseURL, relativeURL) {
  */
 function buildFullPath(baseURL, requestedURL, allowAbsoluteUrls) {
   let isRelativeUrl = !isAbsoluteURL(requestedURL);
-  if (baseURL && isRelativeUrl || allowAbsoluteUrls == false) {
+  if (baseURL && (isRelativeUrl || allowAbsoluteUrls == false)) {
     return combineURLs(baseURL, requestedURL);
   }
   return requestedURL;
 }
 
-const VERSION = "1.8.2";
+const VERSION = "1.8.4";
 
 function parseProtocol(url) {
   const match = /^([-+\w]{1,25})(:?\/\/|:)/.exec(url);
@@ -36023,7 +36073,7 @@ const resolveConfig = (config) => {
 
   newConfig.headers = headers = AxiosHeaders$1.from(headers);
 
-  newConfig.url = buildURL(buildFullPath(newConfig.baseURL, newConfig.url), config.params, config.paramsSerializer);
+  newConfig.url = buildURL(buildFullPath(newConfig.baseURL, newConfig.url, newConfig.allowAbsoluteUrls), config.params, config.paramsSerializer);
 
   // HTTP basic authentication
   if (auth) {
@@ -37453,19 +37503,19 @@ const Portainer = __nccwpck_require__(1055)
     try {
         core.info('🏳️ Portainer Stack Deploy Action')
 
-        // Parse Inputs
-        const inputs = parseInputs()
-        core.startGroup('Parsed Inputs')
-        console.log('inputs:', inputs)
-        core.endGroup() // Inputs
+        // Parse Config
+        const config = getConfig()
+        core.startGroup('Parsed Config')
+        console.log('config:', config)
+        core.endGroup() // Config
 
-        if (!['repo', 'file'].includes(inputs.type)) {
-            core.setFailed(`Unknown type: ${inputs.type}. Values: [repo, file]`)
+        if (!['repo', 'file'].includes(config.type)) {
+            core.setFailed(`Unknown type: ${config.type}. Values: [repo, file]`)
             return
         }
 
         // Check Portainer
-        const portainer = new Portainer(inputs.url, inputs.token)
+        const portainer = new Portainer(config.url, config.token)
         const version = await portainer.getVersion()
         const versionString = `${version.ServerVersion} ${version.VersionSupport} ${version.ServerEdition}`
         core.startGroup(`Portainer Version: \u001b[34m${versionString}`)
@@ -37473,7 +37523,7 @@ const Portainer = __nccwpck_require__(1055)
         console.log(version)
         core.endGroup() // Portainer Version
 
-        if (inputs.fs_path) {
+        if (config.fs_path) {
             if (version.ServerEdition !== 'EE') {
                 core.setFailed('Relative path only supported in Portainer EE!')
                 return
@@ -37481,7 +37531,7 @@ const Portainer = __nccwpck_require__(1055)
         }
 
         // Set Variables
-        let endpointID = parseInt(inputs.endpoint)
+        let endpointID = parseInt(config.endpoint)
         if (!endpointID) {
             const endpoints = await portainer.getEndpoints()
             // console.log('endpoints:', endpoints)
@@ -37490,43 +37540,43 @@ const Portainer = __nccwpck_require__(1055)
                 return core.setFailed('No Endpoints Found!')
             }
         }
-        core.info(`  endpointID: \u001b[36m${endpointID}`)
+        core.info(`endpointID: \u001b[36m${endpointID}`)
 
         let swarmID = null
-        if (!inputs.standalone) {
+        if (!config.standalone) {
             const swarm = await portainer.getSwarm(endpointID)
             // console.log('swarm:', swarm)
             swarmID = swarm.ID
         }
-        core.info(`  swarmID: \u001b[36m${swarmID}`)
+        core.info(`swarmID: \u001b[36m${swarmID}`)
 
         // Get Stack
         const stacks = await portainer.getStacks()
         // console.log('stacks:', stacks)
-        let stack = stacks.find((item) => item.Name === inputs.name)
+        let stack = stacks.find((item) => item.Name === config.name)
         // console.log('stack:', stack)
         let stackID = stack?.Id
-        core.info(`  stackID: \u001b[36m${stackID}`)
+        core.info(`stackID: \u001b[36m${stackID}`)
 
         // Update Environment
-        const env = getEnv(inputs, stack)
+        const env = getEnv(config, stack)
 
         // Perform Deploy
-        if (inputs.type === 'repo') {
+        if (config.type === 'repo') {
             core.info('🌐 Performing Repository Deployment')
             const repositoryAuthentication = !!(
-                inputs.username || inputs.password
+                config.username || config.password
             )
             if (stackID) {
                 core.info(`Stack Found - Updating Stack ID: ${stack.Id}`)
                 const body = {
                     env,
-                    prune: inputs.prune,
-                    pullImage: inputs.pull,
-                    repositoryReferenceName: inputs.ref,
+                    prune: config.prune,
+                    pullImage: config.pull,
+                    repositoryReferenceName: config.ref,
                     repositoryAuthentication,
-                    repositoryPassword: inputs.password,
-                    repositoryUsername: inputs.username,
+                    repositoryPassword: config.password,
+                    repositoryUsername: config.username,
                 }
                 // console.log('body:', body)
                 stack = await portainer.updateStackRepo(
@@ -37539,19 +37589,19 @@ const Portainer = __nccwpck_require__(1055)
             } else {
                 core.info('Stack NOT Found - Deploying NEW Stack')
                 const body = {
-                    name: inputs.name,
+                    name: config.name,
                     swarmID,
-                    repositoryURL: inputs.repo,
-                    composeFile: inputs.file,
+                    repositoryURL: config.repo,
+                    composeFile: config.file,
                     env,
-                    tlsskipVerify: inputs.tlsskip,
-                    repositoryReferenceName: inputs.ref,
+                    tlsskipVerify: config.tlsskip,
+                    repositoryReferenceName: config.ref,
                     repositoryAuthentication,
-                    repositoryPassword: inputs.password,
-                    repositoryUsername: inputs.username,
-                    ...(inputs.fs_path && {
+                    repositoryPassword: config.password,
+                    repositoryUsername: config.username,
+                    ...(config.fs_path && {
                         supportRelativePath: true,
-                        fileSystemPath: inputs.fs_path,
+                        fileSystemPath: config.fs_path,
                     }),
                 }
                 // console.log('body:', body)
@@ -37559,15 +37609,15 @@ const Portainer = __nccwpck_require__(1055)
                 // console.log('stack:', stack)
                 core.info(`Deployed Stack: ${stack.Id}: ${stack.Name}`)
             }
-        } else if (inputs.type === 'file') {
+        } else if (config.type === 'file') {
             core.info('📄 Performing Stack File Deployment')
-            const stackFileContent = fs.readFileSync(inputs.file, 'utf-8')
+            const stackFileContent = fs.readFileSync(config.file, 'utf-8')
             if (stackID) {
-                core.info(`   Stack Found - Updating Stack ID: ${stackID}`)
+                core.info(`Stack Found - Updating Stack ID: ${stackID}`)
                 const body = {
                     env,
-                    prune: inputs.prune,
-                    pullImage: inputs.pull,
+                    prune: config.prune,
+                    pullImage: config.pull,
                     stackFileContent,
                 }
                 // console.log('body:', body)
@@ -37577,11 +37627,11 @@ const Portainer = __nccwpck_require__(1055)
                     body
                 )
                 // console.log('stack:', stack)
-                core.info(`   Updated Stack ${stack.Id}: ${stack.Name}`)
+                core.info(`Updated Stack ${stack.Id}: ${stack.Name}`)
             } else {
                 core.info('   Stack NOT Found - Deploying NEW Stack')
                 const body = {
-                    name: inputs.name,
+                    name: config.name,
                     swarmID,
                     stackFileContent,
                     env,
@@ -37589,7 +37639,7 @@ const Portainer = __nccwpck_require__(1055)
                 // console.log('body:', body)
                 stack = await portainer.createStackString(endpointID, body)
                 // console.log('stack:', stack)
-                core.info(`   Deployed Stack: ${stack.Id}: ${stack.Name}`)
+                core.info(`Deployed Stack: ${stack.Id}: ${stack.Name}`)
             }
         }
 
@@ -37600,9 +37650,9 @@ const Portainer = __nccwpck_require__(1055)
         core.setOutput('endpointID', endpointID)
 
         // Job Summary
-        if (inputs.summary) {
+        if (config.summary) {
             core.info('📝 Writing Job Summary')
-            await writeSummary(inputs, stack)
+            await writeSummary(config, stack)
         }
 
         core.info('✅ \u001b[32;1mFinished Success')
@@ -37615,30 +37665,30 @@ const Portainer = __nccwpck_require__(1055)
 
 /**
  * @function getEnv
- * @param {Object} inputs
+ * @param {Config} config
  * @param {Object} stack
  * @return {Object[]} Portainer formatted environment
  */
-function getEnv(inputs, stack) {
-    if (!inputs.env_json && !inputs.env_file) {
+function getEnv(config, stack) {
+    if (!config.env_json && !config.env_file) {
         return stack?.env ? stack.env : []
     }
     const env = {}
-    if (inputs.merge_env && stack?.Env?.length) {
+    if (config.merge_env && stack?.Env?.length) {
         console.log('🔁 Merging Environment with Current')
         const current = Object.fromEntries(
             stack.Env.map(({ name, value }) => [name, value])
         )
         Object.assign(env, current)
     }
-    if (inputs.env_json) {
-        let data = JSON.parse(inputs.env_json)
+    if (config.env_json) {
+        let data = JSON.parse(config.env_json)
         for (const [name, value] of Object.entries(data)) {
             env[name] = value
         }
     }
-    if (inputs.env_file) {
-        let data = dotenv.config({ path: inputs.env_file })
+    if (config.env_file) {
+        let data = dotenv.config({ path: config.env_file })
         for (const [name, value] of Object.entries(data.parsed)) {
             env[name] = value
         }
@@ -37652,11 +37702,11 @@ function getEnv(inputs, stack) {
 
 /**
  * @function writeSummary
- * @param {Object} inputs
+ * @param {Config} config
  * @param {Object} stack
  * @return {Promise<void>}
  */
-async function writeSummary(inputs, stack) {
+async function writeSummary(config, stack) {
     core.summary.addRaw(`## Portainer Stack Deploy Action\n`)
     const action = stack.UpdateDate ? '**Updated** Existing' : '**Created** New'
     core.summary.addRaw(`🎉 ${action} Stack ${stack.Id}: \`${stack.Name}\`\n\n`)
@@ -37690,6 +37740,15 @@ async function writeSummary(inputs, stack) {
     ])
     core.summary.addRaw('</details>\n')
 
+    delete config.token
+    delete config.env_json
+    const yaml = Object.entries(config)
+        .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+        .join('\n')
+    core.summary.addRaw('<details><summary>Config</summary>')
+    core.summary.addCodeBlock(yaml, 'yaml')
+    core.summary.addRaw('</details>\n')
+
     const text = 'View Documentation, Report Issues or Request Features'
     const link = `https://github.com/cssnr/portainer-stack-deploy-action`
     core.summary.addRaw(`\n[${text}](${link}?tab=readme-ov-file#readme)\n\n---`)
@@ -37697,10 +37756,30 @@ async function writeSummary(inputs, stack) {
 }
 
 /**
- * @function parseInputs
- * @return {{ token: string, url: string, name: string, file: string, endpoint: string | undefined, ref: string, repo: string, tlsskip: boolean, prune: boolean, pull: boolean, type: string, standalone: boolean, env_json: string | undefined, env_file: string | undefined, merge_env: boolean, username: string | undefined, password: string | undefined, fs_path: string | undefined, summary: boolean }}
+ * Get Config
+ * @typedef {Object} Config
+ * @property {string} token
+ * @property {string} url
+ * @property {string} name
+ * @property {string} file
+ * @property {string | undefined} endpoint
+ * @property {string} ref
+ * @property {string} repo
+ * @property {boolean} tlsskip
+ * @property {boolean} prune
+ * @property {boolean} pull
+ * @property {string} type
+ * @property {boolean} standalone
+ * @property {string|undefined} env_json
+ * @property {string|undefined} env_file
+ * @property {boolean} merge_env
+ * @property {string|undefined} username
+ * @property {string|undefined} password
+ * @property {string|undefined} fs_path
+ * @property {boolean} summary
+ * @return {Config}
  */
-function parseInputs() {
+function getConfig() {
     return {
         token: core.getInput('token', { required: true }),
         url: core.getInput('url', { required: true }),
